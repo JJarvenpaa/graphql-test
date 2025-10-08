@@ -1,0 +1,24 @@
+{
+  "name": "graphql-api",
+  "version": "1.0.0",
+  "description": "GraphQL API for project111",
+  "type": "module",
+  "scripts": {
+    "compile": "tsc",
+    "dev": "nodemon --watch src --ext ts --exec \"npm run compile && node dist/index.js\"",
+    "start": "node dist/index.js"
+  },
+  "dependencies": {
+    "@apollo/server": "^5.0.0",
+    "@as-integrations/express5": "^1.1.2",
+    "cors": "^2.8.5",
+    "express": "^5.1.0",
+    "graphql": "^16.11.0",
+    "mysql2": "^3.14.3"
+  },
+  "devDependencies": {
+    "@types/node": "^24.3.1",
+    "nodemon": "^3.0.1",
+    "typescript": "^5.9.2"
+  }
+}
