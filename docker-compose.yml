@@ -18,25 +18,28 @@ services:
     ports:
       - "4000:4000"  # For GraphQL API
     environment:
-      - DB_HOST=db
-      - DB_PORT=3306
-      - DB_USER=root
-      - DB_PASSWORD=example
-      - DB_NAME=projectdb
+      - DOCKER_ENV=true
+      # PostgreSQL environment variables (used by both app and Postgrator)
+      - PGHOST=db
+      - PGPORT=5432
+      - PGDATABASE=projectdb
+      - PGUSER=testuser
+      - PGPASSWORD=example
     depends_on:
       - db
     networks:
       - appnet
   db:
-    image: mysql:8.3.0
+    image: postgres:18-alpine
     restart: unless-stopped
     environment:
-      MYSQL_ROOT_PASSWORD: example
-      MYSQL_DATABASE: projectdb
+      POSTGRES_PASSWORD: example
+      POSTGRES_DB: projectdb
+      POSTGRES_USER: testuser
     ports:
-      - "3306:3306"
+      - "5432:5432"
     volumes:
-      - db_data:/var/lib/mysql
+      - db_data:/var/lib/postgresql/data
       - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
     networks:
       - appnet
