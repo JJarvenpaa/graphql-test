@@ -3,30 +3,27 @@ import { ApolloServerPluginDrainHttpServer } from '@apollo/server/plugin/drainHt
 import { expressMiddleware } from '@as-integrations/express5';
 import express from 'express';
 import cors from 'cors';
-import mysql from 'mysql2/promise';
 import http from 'http';
-
-// Create MySQL connection pool
-const pool = mysql.createPool({
-  host: process.env.DB_HOST || 'db',
-  user: process.env.DB_USER || 'root',
-  password: process.env.DB_PASSWORD || 'example',
-  database: process.env.DB_NAME || 'projectdb',
-  waitForConnections: true,
-  connectionLimit: 10,
-  queueLimit: 0
-});
+import { resolvers } from './resolvers/index.js';
+import { createContext } from './context.js';
 
 // Define your GraphQL schema
+//TODO: remember to update frontend queries and mutations accordingly
 const typeDefs = `#graphql
-  type Item {
+  scalar JSON
+
+  type Product {
     id: ID!
     name: String!
     description: String
     price: Float!
-    categoryID: ID!
-    created_at: String
-    updated_at: String
+    ingredients: [String!]
+    toppings: JSON
+    imgUrl: String
+    enabled: Boolean
+    campaigns: [String!]
+    category: Int!
+    dietaries: [Int!]
   }
 
   interface MutationResponse {
@@ -35,36 +32,48 @@ const typeDefs = `#graphql
     message: String!
   }
 
-  input CreateItem {
+  input CreateProduct {
     name: String!
     description: String
     price: Float!
-    categoryID: ID!
+    ingredients: [String!]
+    toppings: JSON
+    imgUrl: String
+    enabled: Boolean = true
+    campaigns: [String!] = []
+    category: Int!
+    dietaries: [Int!] = []
   }
 
-  input UpdateItem {
+  input UpdateProduct {
     id: ID!
     name: String!
     description: String
     price: Float!
-    categoryID: ID!
+    ingredients: [String!]
+    toppings: JSON
+    imgUrl: String
+    enabled: Boolean
+    campaigns: [String!]
+    category: Int!
+    dietaries: [Int!]
   }
 
-  type CreateItemMutationResponse implements MutationResponse {
+  type CreateProductMutationResponse implements MutationResponse {
     code: String!
     success: Boolean!
     message: String!
-    item: Item
+    product: Product
   }
 
-  type UpdateItemMutationResponse implements MutationResponse {
+  type UpdateProductMutationResponse implements MutationResponse {
     code: String!
     success: Boolean!
     message: String!
-    item: Item
+    product: Product
   }
 
-  type DeleteItemMutationResponse implements MutationResponse {
+  type DeleteProductMutationResponse implements MutationResponse {
     code: String!
     success: Boolean!
     message: String!
@@ -72,116 +81,16 @@ const typeDefs = `#graphql
 
   type Query {
     hello: String
-    items: [Item!]
+    products: [Product!]
   }
 
   type Mutation {
-    createItem(input: CreateItem!): CreateItemMutationResponse
-    updateItem(input: UpdateItem!): UpdateItemMutationResponse
-    deleteItem(id: ID!): DeleteItemMutationResponse
+    createProduct(input: CreateProduct!): CreateProductMutationResponse
+    updateProduct(input: UpdateProduct!): UpdateProductMutationResponse
+    deleteProduct(id: ID!): DeleteProductMutationResponse
   }
 
 `;
-
-// Define your resolvers
-const resolvers = {
-  Query: {
-    hello: () => 'Hello from GraphQL API!',
-
-    //TODO: Should we implement some kind of pagination logic?
-    //GraphQL requires the parent and args even if unused
-    items: async(parent, args, { db }) => {
-      try {
-        const [rows] = await db.execute('SELECT * FROM items');
-
-        return rows;
-      } catch(error) {
-        throw new Error(`Failed to fetch items ${error.message}`);
-      }
-    }
-  },
-
-  //TODO: use correct TS typing here
-  Mutation: {
-    //GraphQL requires the parent argument even if unused
-    createItem: async(parent, { input }, { db }) => {
-      try {
-        const { name, description, price, categoryID } = input;
-
-        const [insertResult] = await db.execute(
-          'INSERT INTO items (name, description, price, categoryID) VALUES (?, ?, ?, ?)',
-          [name, description, price, categoryID]
-        );
-
-        const [rows] = await db.execute('SELECT * FROM items where id = ?', [insertResult.insertId]);
-
-        return {
-          code: "200",
-          success: true,
-          message: "Item added",
-          item: rows[0]
-        };
-      } catch(error) {
-        throw new Error(`Failed to add item: ${error.message}`);
-      }
-    },
-
-    updateItem: async(parent, { input }, { db }) => {
-      try {
-        const { id, name, description, price, categoryID } = input;
-
-        const [updateResult] = await db.execute('UPDATE items SET name = ?, description = ?, price = ?, categoryID = ? WHERE id = ?;', [name, description, price, categoryID, id]);
-
-        const [rows] = await db.execute('SELECT * FROM items WHERE id = ?;', [id]);
-       
-        if (updateResult.changedRows === 0) {
-          return {
-            code: "200",
-            success: true,
-            message: "No changes made - item already up to date",
-            item: rows[0]
-          };
-        }
-
-        return {
-          code: "200", 
-          success: true,
-          message: "Item updated",
-          item: rows[0]
-        };
-      } catch (error) {
-        throw new Error(`Failed to update item: ${error.message}`);
-      }
-    },
-
-    deleteItem: async(parent, { id }, { db }) => {
-      const returnValue = {
-        code: "200", 
-        success: true, 
-        message: "Item deleted"
-      };
-
-      try {
-        const [selectResult] = await db.execute(
-          'SELECT * FROM items where id = ?;', [id]);
-      
-        if(selectResult.length === 0) return returnValue;
-        
-        //TODO: what to do with this result?
-        const [deleteResult] = await db.execute(
-        'DELETE FROM items where id = ?;', [id]);
-        
-        
-      } catch(error) {
-        //TODO: log error here and remove throw
-        throw new Error(`Failed to delete item: ${error.message}`);
-      }
-
-      //Always return success to client, even if error, prevents ID snooping
-      return returnValue;
-    },
-  },
-};
 
 const app = express();
 const httpServer = http.createServer(app);
@@ -200,9 +109,7 @@ app.use(
   cors(),
   express.json(),
   expressMiddleware(server, {
-    context: async ({ req }) => ({
-      db: pool
-    }),
+    context: createContext,
   }),
 );
 
