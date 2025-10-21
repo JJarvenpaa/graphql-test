@@ -7,7 +7,7 @@ export const mutationResolvers = {
       const { name, description, price, ingredients, toppings, imgUrl, enabled, campaigns, category, dietaries } = input;
 
       const insertResult = await db.query(
-        'INSERT INTO product (name, description, price, ingredients, toppings, img_url, enabled, campaigns, category, dietaries) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING *, img_url as "imgUrl"',
+        'INSERT INTO products (name, description, price, ingredients, toppings, img_url, enabled, campaigns, category, dietaries) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING *, img_url as "imgUrl"',
         [name, description, price, ingredients, toppings, imgUrl, enabled, campaigns, category, dietaries]
       );
 
@@ -27,7 +27,7 @@ export const mutationResolvers = {
       const { id, name, description, price, ingredients, toppings, imgUrl, enabled, campaigns, category, dietaries } = input;
 
       const updateResult = await db.query(
-        'UPDATE product SET name = $1, description = $2, price = $3, ingredients = $4, toppings = $5, img_url = $6, enabled = $7, campaigns = $8, category = $9, dietaries = $10 WHERE id = $11 RETURNING *, img_url as "imgUrl";', 
+        'UPDATE products SET name = $1, description = $2, price = $3, ingredients = $4, toppings = $5, img_url = $6, enabled = $7, campaigns = $8, category = $9, dietaries = $10 WHERE id = $11 RETURNING *, img_url as "imgUrl";', 
         [name, description, price, ingredients, toppings, imgUrl, enabled, campaigns, category, dietaries, id]
       );
 
@@ -61,13 +61,13 @@ export const mutationResolvers = {
 
     try {
       const selectResult = await db.query(
-        'SELECT * FROM product WHERE id = $1;', [id]);
+        'SELECT * FROM products WHERE id = $1;', [id]);
     
       if(selectResult.rows.length === 0) return returnValue;
       
       //TODO: what to do with this result?
       const deleteResult = await db.query(
-      'DELETE FROM product WHERE id = $1;', [id]);
+      'DELETE FROM products WHERE id = $1;', [id]);
       
       
     } catch(error) {

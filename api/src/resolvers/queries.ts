@@ -5,7 +5,7 @@ export const queryResolvers = {
   //GraphQL requires the parent and args even if unused
   products: async(parent, args, { db }) => {
     try {
-      const result = await db.query('SELECT *, img_url as "imgUrl" FROM product');
+      const result = await db.query('SELECT *, img_url as "imgUrl" FROM products');
 
       return result.rows;
     } catch(error) {
