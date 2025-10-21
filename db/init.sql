@@ -20,5 +20,4 @@ CREATE TABLE IF NOT EXISTS products (
   dietaries INT[]
 );
 
---TODO: why is /migrations not found by postgrator?
 

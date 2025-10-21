@@ -8,7 +8,6 @@ import { resolvers } from './resolvers/index.js';
 import { createContext } from './context.js';
 
 // Define your GraphQL schema
-//TODO: remember to update frontend queries and mutations accordingly
 const typeDefs = `#graphql
   scalar JSON
 
