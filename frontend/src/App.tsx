@@ -40,113 +40,131 @@ function testGraphqlAPI() {
   });
 }
 
-async function queryItems() {
+async function queryProducts() {
   const query = `
-    query GetItems {
-      items {
+    query products {
+      products {
         id
         name
         description
-        price
-        categoryID
-        created_at
-        updated_at
+        ingredients
+        toppings
+        imgUrl
+        campaigns
+        category
+        dietaries
       }
     }
   `;
-
+    
   try {
     const queryResponse = await graphqlClient.query(query);
     console.log('Response: ', queryResponse);
 
-    return queryResponse.data.items;
+    return queryResponse.data.products;
 
   } catch(error) {
-    console.error('Failed to fetch items: ', error);
+    console.error('Failed to fetch products: ', error);
   }
 }
 //TODO: create input types for all mutations for client-side validations
-async function testCreateItem() {
-  const item = {
+async function testCreateProduct() {
+  const product = {
     name: "Paras Hanppari",
     description: "Kaupungin paras hanppari on nyt täällä!",
     price: 10.00,
-    categoryID: 3
+    ingredients: ["Jauhelihapihvi", "Sämpylä", "Salaatti", "Juusto", "Ketsuppi"],
+    toppings: { "Lisäjuusto": 1.50, "Bacon": 2.00, "Ananas": 1.00 },
+    imgUrl: "https://example.com/image.jpg",
+    campaigns: ["1", "2"],
+    category: 3,
+    dietaries: [0, 1],
   };
 
   const query = `
-    mutation CreateItem($input: CreateItem!) {
-      createItem(input: $input) {
+    mutation CreateProduct($input: CreateProduct!) {
+      createProduct(input: $input) {
         code
         success
         message
-        item {
+        product {
           id
           name
           description
           price
-          categoryID
-          created_at
-          updated_at
+          ingredients
+          toppings
+          imgUrl
+          campaigns
+          category
+          dietaries
         }
       }
     }
   `;
 
   try {
-    const newItem = await graphqlClient.query(query, { input: item });
-    console.log('Created item:', newItem);
+    const newProduct = await graphqlClient.query(query, { input: product });
+    console.log('Created product:', newProduct);
   } catch (error) {
-    console.error('Error creating item:', error);
+    console.error('Error creating product:', error);
   }
 }
 
 //TODO: Do we need to check if item has changed before updating?
 //TODO: Do we need to handle race conditions when multiple updates occur simultaneously?
 
-async function testUpdateItem() {
-  const itemUpdate = {
-    id: 20,
+async function testUpdateProduct() {
+  const productUpdate = {
+    id: "826afcbf-a454-4eaa-b8c1-101c717997c7",
     name: "Updated Hanppari 3",
     description: "Päivitetty kuvaus 3",
     price: 14.50,
-    categoryID: 2
+    ingredients: ["Jauhelihapihvi", "Sämpylä", "Salaatti", "Juusto", "Ketsuppi"],
+    toppings: { "Lisäjuusto": 1.50, "Lisämajo": 2.00, "Ananas": 1.00 },
+    imgUrl: "https://example2.com/image.jpg",
+    campaigns: ["3", "4"],
+    category: 3,
+    dietaries: [2, 3],
   };
 
   const query = `
-    mutation UpdateItem($input: UpdateItem!) {
-      updateItem(input: $input) {
+    mutation UpdateProduct($input: UpdateProduct!) {
+      updateProduct(input: $input) {
         code
         success
         message
-        item {
+        product {
           id
           name
           description
           price
-          categoryID
-          created_at
-          updated_at
+          ingredients
+          toppings
+          imgUrl
+          campaigns
+          category
+          dietaries
         }
       }
     }
   `;
 
   try {
-    const updatedItem = await graphqlClient.query(query, { input: itemUpdate });
-    console.log('Updated item:', updatedItem);
+    const updatedProduct = await graphqlClient.query(query, { input: productUpdate });
+    console.log('Updated product:', updatedProduct);
   } catch (error) {
-    console.error('Error updating item:', error);
+    console.error('Error updating product:', error);
   }
 };
 
 
-async function testDeleteItem() {
-  const itemId = 23;
+async function testDeleteProduct() {
+  const productId = "063c5a2f-90aa-4a9c-ac44-2f2cdf4341b2";
 
   const query = `
-    mutation DeleteItem($id: ID!) {
-      deleteItem(id: $id) {
+    mutation DeleteProduct($id: ID!) {
+      deleteProduct(id: $id) {
         code
         success
         message
@@ -155,7 +173,7 @@ async function testDeleteItem() {
   `;
 
    try {
-    const deletedItem = await graphqlClient.query(query, { id:  itemId});
+    const deletedProduct = await graphqlClient.query(query, { id:  productId});
     console.log('Deleted item successfully');
   } catch (error) {
     //TODO: security wise we don't want to disclose if ID exists in our database, so we shouldn't return an error here. Instead we want to only log it server side.
@@ -163,7 +181,7 @@ async function testDeleteItem() {
   }  
 }
 // Simple test without async function
-queryItems()
+queryProducts()
   .then(items => {
     console.log('Fetched items:', items);
   })
@@ -172,7 +190,7 @@ queryItems()
   });
 
 testGraphqlAPI();
-testCreateItem();
-testUpdateItem();
-testDeleteItem();
+testCreateProduct();
+testUpdateProduct();
+testDeleteProduct();
 export default App;

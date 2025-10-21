@@ -1,3 +1,11 @@
+## Initial Setup
+
+1. **Create environment file:**
+   ```bash
+   cp .env.example .env
+   ```
+   Or create `.env` manually
+
 # Running with Docker Compose
 
 To start the frontend, database and API using Docker:
@@ -10,10 +18,19 @@ docker compose up
 - The database runs in a separate container and is accessible from the frontend container as `db` on port `3306`.
 - API runs in a seperate container and is accessible from the API container as 'api' on port '4000'
 
+## Database Migrations
+
+Run migrations from inside the Docker container:
+
+```bash
+sudo docker exec -it graphql-test-api-1 npx postgrator <number of migration>
+```
+Additional documentation for postgrator: https://github.com/MattiLehtinen/postgrator-cli
+
 - if you make changes to the db/init.sql file, remember to reset the database volume:
 ```bash
 docker compose down
-docker volume rm project111_db_data
+docker volume rm graphql-test_db_data
 docker compose up --build
 ```
 
@@ -53,3 +70,4 @@ For development with step-debugging capabilities, you can run the API locally wh
 
 - If breakpoints are hollow, run `npm run compile` in the api directory
 - Make sure only database and frontend are running in Docker (not the full stack)
+- If you get permission errors remember to check if /api/dist folder has the same ownership as /api files with ls -l. You can change this with chown command.
